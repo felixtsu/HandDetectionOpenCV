@@ -1,26 +1,26 @@
 from cvzone.HandTrackingModule import HandDetector
 import cv2
-from utils import cv2AddChineseText
 
 cap = cv2.VideoCapture(0)
+
+# 生成一个手部侦测器
+# 敏感度是0.8 可以改变模型的灵敏度 更灵敏有可能会出错
+# maxHands 最多识别多少双手
 detector = HandDetector(detectionCon=0.8, maxHands=2)
 
 
+## 如何用这个来判定石头剪刀布呢？
 def detect_rock_paper_scissors(img, fingers, bbox):
-    if fingers == [0, 0, 0, 0, 0]:
-        return cv2AddChineseText(img, "石头", (bbox[0] + 60, bbox[1] - 60), (255, 0, 255))
-        # cv2.putText(img, "石头", (bbox1[0] + 60, bbox1[1] - 30), cv2.FONT_HERSHEY_PLAIN,
-        #             2, (255, 0, 255), 2)
-    elif fingers == [1, 1, 1, 1, 1]:
-        return cv2AddChineseText(img, "布", (bbox[0] + 60, bbox[1] - 60), (255, 0, 255))
-        # cv2.putText(img, "布", (bbox1[0] + 60, bbox1[1] - 30), cv2.FONT_HERSHEY_PLAIN,
-        #             2, (255, 0, 255), 2)
-    elif fingers == [0, 1, 1, 0, 0]:
-        return cv2AddChineseText(img, "剪刀", (bbox[0] + 60, bbox[1] - 60), (255, 0, 255))
-        # cv2.putText(img, "剪刀", (bbox1[0] + 60, bbox1[1] - 30), cv2.FONT_HERSHEY_PLAIN,
-        #             2, (255, 0, 255), 2)
-    else:
-        return img
+    ## 以下三行分别在手部框框上方输出 rock paper和scissor
+    ## 我这里为了展示，不管你怎么出我都判定出了石头
+    cv2.putText(img, "rock", (bbox1[0] + 60, bbox1[1] - 30), cv2.FONT_HERSHEY_PLAIN,
+                    2, (255, 0, 255), 2)
+    # cv2.putText(img, "paper", (bbox1[0] + 60, bbox1[1] - 30), cv2.FONT_HERSHEY_PLAIN,
+    #                 2, (255, 0, 255), 2)
+    # cv2.putText(img, "scissor", (bbox1[0] + 60, bbox1[1] - 30), cv2.FONT_HERSHEY_PLAIN,
+    #                 2, (255, 0, 255), 2)
+    return "rock"
+    
 
 
 while True:
@@ -40,26 +40,29 @@ while True:
         handType1 = hand1["type"]  # Handtype Left or Right
 
         fingers1 = detector.fingersUp(hand1)
-        img = detect_rock_paper_scissors(img, fingers1, bbox1)
 
-        if len(hands) == 2:
-            # Hand 2
-            hand2 = hands[1]
-            lmList2 = hand2["lmList"]  # List of 21 Landmark points
-            bbox2 = hand2["bbox"]  # Bounding box info x,y,w,h
-            centerPoint2 = hand2['center']  # center of the hand cx,cy
-            handType2 = hand2["type"]  # Hand Type "Left" or "Right"
+        ## 你要做的是实现这个函数，让程序可以识别现在出来的是石头剪刀还是布
+        result = detect_rock_paper_scissors(img, fingers1, bbox1)
 
-            fingers2 = detector.fingersUp(hand2)
-            img = detect_rock_paper_scissors(img, fingers2, bbox2)
+        ## 无敌的作弊开始，出啥都秒杀
+        if result == "rock":
+            cv2.putText(img, "AI plays paper", (500, 270), cv2.FONT_HERSHEY_PLAIN,
+                    2, (255, 0, 255), 2)
+        elif result == "paper":
+            cv2.putText(img, "AI plays scissor", (500, 270), cv2.FONT_HERSHEY_PLAIN,
+                    2, (255, 0, 255), 2)
+        elif result == "scissor":
+            cv2.putText(img, "AI plays rock", (500, 270), cv2.FONT_HERSHEY_PLAIN,
+                    2, (255, 0, 255), 2)
 
-            # Find Distance between two Landmarks. Could be same hand or different hands
-            # print(lmList1)
-            # print(lmList2)
-            length, info, img = detector.findDistance(lmList1[8][:2], lmList2[8][:2], img)  # with draw
-            # length, info = detector.findDistance(lmList1[8], lmList2[8])  # with draw
+
+
     # Display
-    cv2.imshow("Image", img)
+    cv2.imshow("God of rock paper scissor", img)
     cv2.waitKey(1)
+
+    if cv2.waitKey(1) & 0xff == ord('q'):
+        break
+
 cap.release()
 cv2.destroyAllWindows()
